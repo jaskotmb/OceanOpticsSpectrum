@@ -22,40 +22,37 @@ for j in range(1,11):
     zeroLength = 10
     pulseLength = 3
     multiples = 3
-    uLevs = [1,2,3,4,5,6,7,8,9,10,15,20,30,40,50,60,70,80,90]
-    uLevs = [x*1e-6 for x in uLevs]
-    mLevs = [0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]#,1.25,1.5,1.75,2,2.25,2.5]#,1.5,2,3,4,5,6,7,8,9,10]
-    mLevs = [x*1e-3 for x in mLevs]
-    lev = uLevs + mLevs
-    lev.reverse()
-    #lev = [-x for x in lev]
-    currList = []
-    for i in range(len(lev)):
-        currList = currList + ([0]*zeroLength + [lev[i]]*pulseLength)*multiples
+    vLevs = [0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,
+             10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16]
+    #vLevs.reverse()
+    #vLevs = [-x for x in vLevs]
+    voltList = []
+    for i in range(len(vLevs)):
+        voltList = voltList + ([0]*zeroLength + [vLevs[i]]*pulseLength)*multiples
     pulseTime = .025
-    currList = currList + [0]*zeroLength
-    currList.reverse() # Reverse List
-    print("Length of list: {}".format(len(currList)))
+    voltList = voltList + [0]*zeroLength
+    voltList.reverse() # Reverse List
+    print("Length of list: {}".format(len(voltList)))
 
     trigWidth = 5e-3 # range allowed is 1e-5 to 1e-2 seconds (.01 to 10 ms)
-    listString = ','.join(str(x) for x in currList)
+    listString = ','.join(str(x) for x in voltList)
 
     tbegin = time.time()
     print("Time Begin: {}".format(time.strftime("%a, %d %b %Y %H:%M:%S",time.localtime(tbegin))))
 
     smu.write("*RST")
-    smu.write(":SOUR:FUNC:MODE CURR")
-    smu.write(":SOUR:CURR:RANG .01") # set in uA range (0.001)
-    smu.write(":SOUR:CURR:MODE LIST")
-    smu.write(":SOUR:LIST:CURR {}".format(listString))
-    smu.write(':SENS:FUNC ""VOLT""')
-    smu.write(':SENS:VOLT:RANG:AUTO ON')
-    smu.write(':SENS:VOLT:APER .15')
-    smu.write(':SENS:VOLT:PROT 30')
+    smu.write(":SOUR:FUNC:MODE VOLT")
+    smu.write(":SOUR:VOLT:RANG 20") # set in uA range (0.001)
+    smu.write(":SOUR:VOLT:MODE LIST")
+    smu.write(":SOUR:LIST:VOLT {}".format(listString))
+    smu.write(':SENS:FUNC ""CURR""')
+    smu.write(':SENS:CURR:RANG:AUTO ON')
+    smu.write(':SENS:CURR:APER .15')
+    smu.write(':SENS:CURR:PROT .005')
     smu.write(':FORM:DATA ASC')
     smu.write(':TRIG:SOUR AINT')
     smu.write(':TRIG:TIM {}'.format(pulseTime))
-    smu.write(':TRIG:COUN {}'.format(len(currList)))
+    smu.write(':TRIG:COUN {}'.format(len(voltList)))
     smu.write(":TRIG:MEAS:DEL .001")
     smu.write(':OUTP ON')
     smu.write(":SOUR:TOUT:STAT ON")
@@ -67,8 +64,8 @@ for j in range(1,11):
     # this is effectively the delay between the current sourcing and spectrometer measurement
     # range allowed is 1e-5 to 1e-2 seconds (.01 to 10 ms)
     smu.write(':INIT (@1)')
-    sourceCurr = smu.query(':FETC:ARR:CURR? (@1)').split(',')
-    measVolts = smu.query(':FETC:ARR:VOLT? (@1)').split(',')
+    sourceVolt = smu.query(':FETC:ARR:VOLT? (@1)').split(',')
+    measCurr = smu.query(':FETC:ARR:CURR? (@1)').split(',')
     smu.write(':OUTP OFF')
 
     tend = time.time()
@@ -99,7 +96,7 @@ for j in range(1,11):
         intAvg.append(OLEDTools.integrateSpectrum(wvl,intens,480,680)[0])
     for i in range(len(spectrumFileList)): # remove temporary spectrum files generated
         os.remove(spectrumFileList[i])
-    currVoltTupIntens = list(zip(currList,measVolts,intAvg))
+    currVoltTupIntens = list(zip(measCurr,sourceVolt,intAvg))
     os.chdir("C:\\Users\\Jerry\\IdeaProjects\\OceanOpticsSpectrum")
     with open(fName+"_{}.csv".format(j),'w') as resultFile:
         wr = csv.writer(resultFile,lineterminator='\n')
