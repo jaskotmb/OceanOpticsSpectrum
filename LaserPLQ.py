@@ -7,9 +7,9 @@ sys.path.append('C:\\Users\\Jerry\\IdeaProjects\\OLED_Tools')
 import OLEDTools
 import csv
 
-fName = "190719M24Vfr"
+fName = "190M2Vxf"
 flag = 0
-for j in range(1,11):
+for j in range(4,11):
     rm = visa.ResourceManager()
     B2901A = rm.list_resources()[0]
     smu = rm.open_resource(B2901A)
@@ -27,7 +27,7 @@ for j in range(1,11):
     mLevs = [0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]#,1.25,1.5,1.75,2,2.25,2.5]#,1.5,2,3,4,5,6,7,8,9,10]
     mLevs = [x*1e-3 for x in mLevs]
     lev = uLevs + mLevs
-    lev.reverse()
+    #lev.reverse()
     #lev = [-x for x in lev]
     currList = []
     for i in range(len(lev)):

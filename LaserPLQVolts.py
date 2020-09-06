@@ -3,11 +3,12 @@ import os
 import time
 import glob
 import sys
+import numpy as np
 sys.path.append('C:\\Users\\Jerry\\IdeaProjects\\OLED_Tools')
 import OLEDTools
 import csv
 
-fName = "190719M24Vfr"
+fName = "190906M32Vxbr"
 flag = 0
 for j in range(1,11):
     rm = visa.ResourceManager()
@@ -19,17 +20,19 @@ for j in range(1,11):
     print("SMU: {}".format(smu.query("*IDN?")))
 
     currList = []
-    zeroLength = 10
-    pulseLength = 3
-    multiples = 3
-    vLevs = [0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5,10,
-             10.5,11,11.5,12,12.5,13,13.5,14,14.5,15,15.5,16]
-    #vLevs.reverse()
+    zeroLength = 4
+    pulseLength = 4
+    multiples = 1
+    maxVolts = 10 #+(j*0.25)
+    #vLevs = list(np.linspace(0+j*0.25,maxVolts,6))
+    vLevs = list(np.linspace(0.25,maxVolts,4*maxVolts))
+    #vLevs = list(np.linspace(11,12,3))
+    vLevs.reverse()
     #vLevs = [-x for x in vLevs]
     voltList = []
     for i in range(len(vLevs)):
         voltList = voltList + ([0]*zeroLength + [vLevs[i]]*pulseLength)*multiples
-    pulseTime = .025
+    pulseTime = .01
     voltList = voltList + [0]*zeroLength
     voltList.reverse() # Reverse List
     print("Length of list: {}".format(len(voltList)))
@@ -42,13 +45,13 @@ for j in range(1,11):
 
     smu.write("*RST")
     smu.write(":SOUR:FUNC:MODE VOLT")
-    smu.write(":SOUR:VOLT:RANG 20") # set in uA range (0.001)
+    smu.write(":SOUR:VOLT:RANG 200") # set in uA range (0.001)
     smu.write(":SOUR:VOLT:MODE LIST")
     smu.write(":SOUR:LIST:VOLT {}".format(listString))
     smu.write(':SENS:FUNC ""CURR""')
     smu.write(':SENS:CURR:RANG:AUTO ON')
-    smu.write(':SENS:CURR:APER .15')
-    smu.write(':SENS:CURR:PROT .005')
+    smu.write(':SENS:CURR:APER .02')
+    smu.write(':SENS:CURR:PROT .04')
     smu.write(':FORM:DATA ASC')
     smu.write(':TRIG:SOUR AINT')
     smu.write(':TRIG:TIM {}'.format(pulseTime))
